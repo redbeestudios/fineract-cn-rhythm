@@ -79,24 +79,6 @@ dependencies {
 
 publishToMavenLocal.dependsOn bootRepackage
 
-publishing {
-    publications {
-        service(MavenPublication) {
-            from components.java
-            groupId project.group
-            artifactId project.name
-            version project.findProperty('externalVersion') ?: project.version
-        }
-        bootService(MavenPublication) {
-            // "boot" jar
-            artifact ("$buildDir/libs/$project.name-$version-boot.jar")
-            groupId project.group
-            artifactId ("$project.name-boot")
-            version project.findProperty('externalVersion') ?: project.version
-        }
-    }
-}
-
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
