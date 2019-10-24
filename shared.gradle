@@ -23,7 +23,7 @@ ext.versions = [
         frameworklang : '0.1.0-BUILD-SNAPSHOT',
         frameworkasync : '0.1.0-BUILD-SNAPSHOT',
         frameworkcassandra : '0.1.0-BUILD-SNAPSHOT',
-        frameworkmariadb : '0.1.0-BUILD-SNAPSHOT',
+        frameworkpostgresql : '0.1.0-BUILD-SNAPSHOT',
         frameworkcommand : '0.1.5-BUILD-SNAPSHOT',
         frameworktest: '0.1.0-BUILD-SNAPSHOT',
         frameworkanubis: '0.1.0-BUILD-SNAPSHOT',
@@ -31,11 +31,6 @@ ext.versions = [
         identity:  '0.1.0-BUILD-SNAPSHOT',
         validator : '5.3.0.Final'
 ]
-
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'maven-publish'
-apply plugin: 'io.spring.dependency-management'
 
 tasks.withType(JavaCompile) {
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -70,7 +65,8 @@ ext['spring-data-releasetrain.version'] = 'Gosling-SR2A'
 
 dependencies {
     compile(
-            [group: 'com.google.code.findbugs', name: 'jsr305']
+            [group: 'com.google.code.findbugs', name: 'jsr305'],
+            [group: 'postgresql', name: 'postgresql', version: '9.0-801.jdbc4']
     )
 
     testCompile(
@@ -79,8 +75,24 @@ dependencies {
 }
 
 jar {
-    from sourceSets.main.allSource
+    from sourceSets.main.java
 }
+
+artifactory {
+    contextUrl = System.getenv("ARTIFACTORY_URL")
+    publish {
+        repository {
+            repoKey = project.findProperty('artifactoryRepoKey')
+            username = System.getenv("ARTIFACTORY_USER")
+            password = System.getenv("ARTIFACTORY_PASSWORD")
+        }
+
+        defaults {
+            publications ('api', 'componentTest', 'service', 'bootService', 'spi')
+        }
+    }
+}
+artifactoryPublish.dependsOn('publishToMavenLocal')
 
 license {
     header rootProject.file('../HEADER')
@@ -105,7 +117,10 @@ rat {
             "gradlew",
             "gradlew.bat",
             "README.md",
-            "**/.dockerignore/**"
+            "**/.dockerignore/**",
+            "**/target/**",
+            "**/*.log",
+            "**/banner.txt"
     ]
     plainOutput = true
 }

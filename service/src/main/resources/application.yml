@@ -29,12 +29,21 @@ eureka:
     enabled: true
   instance:
     leaseRenewalIntervalInSeconds: 1
+    homePageUrl: "http://${eureka.hostname}:2022/rhythm/v1/"
   client:
     initialInstanceInfoReplicationIntervalSeconds: 0
     instanceInfoReplicationIntervalSeconds: 1
     fetchRegistry: true
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+
+server:
+  port: 2022
+  contextPath: /rhythm/v1/*
+
+endpoints:
+  shutdown:
+    enabled: true
 
 ribbon:
   eureka:
@@ -43,14 +52,6 @@ ribbon:
 activemq:
   secured: false
   brokerUrl: tcp://localhost:61616
-
-server:
-  port: 2022
-  contextPath: /rhythm/v1
-
-endpoints:
-    shutdown:
-      enabled: true
 
 cassandra:
   clustername: datacenter1
@@ -61,19 +62,28 @@ cassandra:
     write: ONE
     delete: ONE
 
-mariadb:
-  driverClass: org.mariadb.jdbc.Driver
+postgresql:
+  driverClass: org.postgresql.Driver
   database: seshat
   host: localhost
-  port: 3306
-  user: seshat
-  password: password
+  port: 5432
+  user: postgres
+  password: postgres
 
 executor:
   corepoolsize: 32
   maxpoolsize: 16384
   queuecapacity: 0
   threadname: fineractcn-executor-
+
+bonecp:
+  idleMaxAgeInMinutes: 240
+  idleConnectionTestPeriodInMinutes: 60
+  maxConnectionsPerPartition: 10
+  minConnectionsPerPartition: 1
+  partitionCount: 2
+  acquireIncrement: 5
+  statementsCacheSize: 100
 
 system:
   initialclientid: service-runner
