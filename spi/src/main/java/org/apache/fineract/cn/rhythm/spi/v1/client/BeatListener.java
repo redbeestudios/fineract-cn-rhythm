@@ -30,8 +30,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
  */
 @SuppressWarnings("unused")
 @FeignClient()
+//@FeignClient(value = "portfolio-v1", path = "/portfolio/v1", configuration = CustomFeignClientsConfiguration.class)
 public interface BeatListener {
-  String PUBLISH_BEAT_PATH = "/portfolio/v1/beatlistener/v1/publishedbeats";
+  String PUBLISH_BEAT_PATH = "/beatlistener/v1/publishedbeats";
 
   @RequestMapping(
           value = PUBLISH_BEAT_PATH,

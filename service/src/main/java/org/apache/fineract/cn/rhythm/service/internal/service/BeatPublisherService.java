@@ -123,6 +123,8 @@ public class BeatPublisherService {
           logger.debug("Failed to request permission for application {}, in tenant {} because the request already exists. {} was thrown.", applicationIdentifier, tenantIdentifier, e);
         }
 
+        this.identityManager.logout();
+
         return Optional.of(consumerPermittableGroupIdentifier);
       }
     }
@@ -157,22 +159,29 @@ public class BeatPublisherService {
       return false;
 
     final InstanceInfo beatListenerService = applicationsByName.get(0);
+
+    logger.info("try to create beatListener endpoint for service url '{}", beatListenerService.getHomePageUrl());
+
     final BeatListener beatListener = apiFactory.create(BeatListener.class, beatListenerService.getHomePageUrl());
 
     try (final AutoTenantContext ignored = new AutoTenantContext(tenantIdentifier)) {
-      final String accessToken;
-      try {
-        accessToken = applicationAccessTokenService.getAccessToken(
-                properties.getUser(), tenantIdentifier);
-      }
-      catch (final Exception e) {
+
+      final Authentication schedulerUserAuthentication;
+      try (final AutoGuest ignored2 = new AutoGuest()) {
+        logger.info("Login user '{}' pass '{}'.", properties.getUser(), properties.getPassword());
+        schedulerUserAuthentication = this.identityManager.login(properties.getUser(), properties.getPassword());
+      } catch (final Exception e) {
         logger.warn("Unable to publish beat '{}' to application '{}' for tenant '{}', " +
-                "because access token could not be acquired from identity. Exception was {}.",
+                        "because access token could not be acquired from identity. Exception was {}.",
                 beatIdentifier, applicationIdentifier, tenantIdentifier, e);
         return false;
       }
-      try (final AutoUserContext ignored2 = new AutoUserContext(properties.getUser(), accessToken)) {
+
+      try (final AutoUserContext ignored2 = new AutoUserContext(properties.getUser(), schedulerUserAuthentication.getAccessToken())) {
         beatListener.publishBeat(beatPublish);
+
+        this.identityManager.logout();
+
         return true;
       }
     }
